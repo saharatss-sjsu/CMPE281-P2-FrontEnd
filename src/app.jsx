@@ -16,15 +16,14 @@ export default function App() {
 	const [user, setUser] = useState(null);
 
 	let api = {};
-	// api.host_backend = `${window.location.protocol}//${window.location.host}`;
-	// api.host_backend    = `http://cmpe281-p2-2068810416.us-west-1.elb.amazonaws.com`;
-	api.host_backend    = `http://localhost:8000`;
+	// api.host_backend    = `http://localhost:8000`;
+	api.host_backend    = `${window.location.protocol}//${window.location.host}`;
 	api.host_cloudfront = 'https://d245rtkoblgto6.cloudfront.net';
 	api.session = {
 		'id':sessionID, 
 		'setSession':(newSessionID)=>{
 			setSessionID(newSessionID);
-			setCookie('sessionid', newSessionID, {sameSite: 'lax', path: '/'});
+			setCookie('sessionid', newSessionID, {sameSite: 'none', path: '/'});
 			localStorage.setItem("sessionid", newSessionID);
 		}, 
 		'clearSession':()=>{
@@ -34,6 +33,7 @@ export default function App() {
 		}
 	}
 	api.request = (url, method='GET', data=null)=>{
+		if(api.host_backend==null) return new Promise((resolveInner)=>{});
 		return fetch(`${api.host_backend}${url}`,{
 			'method':method,
 			'mode': 'cors',
@@ -49,8 +49,11 @@ export default function App() {
 		'user':user,
 		'setUser':setUser,
 		'fetch':()=>{
-			api.request('/api/user/me/get')
-			.then(response=>response.status===200?response.json():null)
+			api.request('/api/user/me/get/')
+			.then(response=>{
+				if(response.status===200) return response.json();
+				else api.session.clearSession();
+			})
 			.then(data=>{
 				if(data == null) return;
 				setUser(data.user);

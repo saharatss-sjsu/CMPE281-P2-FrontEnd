@@ -1,10 +1,16 @@
-# Getting Started with Create React App
+# LieSense Checker
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+License (Real ID) verification platform
+
+This project is a part of the class CMPE 281 (Cloud Technologies by prof. Sanjay Garje) at San Jose State University (SJSU)
 
 ## Available Scripts
 
 In the project directory, you can run:
+
+### `npm install`
+
+Install all dependencies before you can run the project
 
 ### `npm start`
 
