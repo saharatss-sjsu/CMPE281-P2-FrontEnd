@@ -12,6 +12,8 @@ import {
 	Input,
 	Alert,
 	Link,
+	ExpandableSection,
+	ColumnLayout,
 	FormField,
 	FileUpload,
 	Container,
@@ -19,10 +21,20 @@ import {
 	TextFilter,
 	Pagination,
 } from "@cloudscape-design/components";
+import * as Icon from '@mui/icons-material';
 
 import NavigationBar from '../components/NavigationBar';
 
 import ServiceNavigation from '../components/ServiceNavigation';
+
+function MatchingResultIcon({ isMatch, text=null }){
+	return (<div style={{display:"flex", columnGap:"5px"}}>
+		{isMatch == null ? <><Icon.Help fontSize="small" color="disabled" /><div style={{color:'#aaa'}}>Verifying...</div></>:<>
+			{isMatch ? <Icon.CheckCircle fontSize="small" color="success" />:<Icon.Cancel fontSize="small" color="error" />}
+			{isMatch ? <Box color="text-status-success">{text}</Box>:<Box color="text-status-error">{text}</Box>}
+			</>}
+		</div>);
+}
 
 export default function PageHome({ api }) {
 	const navigate = useNavigate();
@@ -44,18 +56,14 @@ export default function PageHome({ api }) {
 	}
 	//#endregion
 	//#region file upload handler
-	const [uploadingIDNumber, setUploadingIDNumber] = useState("");
 	const [uploadingFile, setUploadingFile] = useState([]);
 	const [textUpload, setTextUpload] = useState("Max file size 10MB.");
-	function fileUploadStart(file, driver_license){
+	function fileUploadStart(file){
 		if(file == null) return;
 		api.request('/api/id/matching/upload/', 'POST', {
-			driver_license: driver_license,
-			image:{
-				name: file.name,
-				type: file.type,
-				size: file.size
-			}
+			name: file.name,
+			type: file.type,
+			size: file.size
 		})
 		.then(response => {
 			if(response.status === 200) return response.json();
@@ -70,10 +78,11 @@ export default function PageHome({ api }) {
 			setTextUpload(`${file.name} is uploading...`)
 			fileUploadDo(data, file).then(response => {
 				if(response.status === 204){
-					setTextUpload(`${driver_license} image uploaded successfully.`);
+					setTextUpload(`The image was uploaded successfully.`);
 					pushAlert('success', `${file.name} uploaded successfully.`);
 					fileUploadFinish(data.file.id);
 					setUploadingFile([]);
+					fetchMatchingList();
 				}
 			})
 		})
@@ -99,8 +108,31 @@ export default function PageHome({ api }) {
 		})
 	}
 	//#endregion
-	//#region history
-	// const [historyList, setHistoryList] = useState([]);
+	//#region matchingList
+	const [matchingDetailViewing, setMatchingDetailViewing] = useState(null);
+	const [matchingList, setMatchingList] = useState(null);
+	const [matchingListSorting, setMatchingListSorting] = useState({
+		sortingField: 'created',
+		sortingDescending: true
+	});
+	function fetchMatchingList(){
+		setMatchingList(null);
+		api.request('/api/id/matching/getlist/', 'GET')
+		.then(response => {
+			if(response.status === 200) return response.json();
+			else return response.text();
+		})
+		.then(data => {
+			if(data == null) return;
+			if(typeof data === 'string'){
+				pushAlert('error',data);
+				return;
+			}
+			data.matchings.sort((a,b)=>(new Date(b.created) - (new Date(a.created))));
+			setMatchingList(data.matchings);
+			console.log(data.matchings);
+		});
+	}
 	//#endregion
 	//#region on_load
 	useEffect(()=>{
@@ -111,6 +143,7 @@ export default function PageHome({ api }) {
 		if(api.user.user == null){
 			api.user.fetch();
 		}
+		fetchMatchingList();
 	}, [api.session]);
 	//#endregion
 
@@ -120,15 +153,55 @@ export default function PageHome({ api }) {
 
 			<AppLayout
 				headerSelector='#navbar'
+				toolsHide={true}
+				navigationHide={true}
 				navigation={<ServiceNavigation/>}
 				navigationOpen={navigationOpen}
 				onNavigationChange={({detail}) => setNavigationOpen(detail.open)}
 				// ariaLabels={appLayoutLabels}
 				maxContentWidth={800}
 				content={<>
-					
 					<ContentLayout header={<Header variant="h1">License Verification</Header>}>
 						<SpaceBetween direction="vertical" size="l">
+							{matchingDetailViewing ? (
+								<Container header={<Header variant="h2">Verification Detail</Header>} >
+									<SpaceBetween direction="vertical" size="m">
+										<Button variant="primary" onClick={()=>{ setMatchingDetailViewing(null); }}>Go back</Button>
+										<ExpandableSection headerText="Image" defaultExpanded>
+											<img src={`${api.host_cloudfront}/${matchingDetailViewing.image.path}`} style={{width:"100%"}} alt='' />
+										</ExpandableSection>
+										<ExpandableSection headerText="Result" defaultExpanded>
+											<ColumnLayout columns={1} variant="text-grid">
+												<div>
+													<Box variant="awsui-key-label">Face</Box>
+													<div><MatchingResultIcon isMatch={matchingDetailViewing.result_matching?.face_similarity} text={`Similarity ${matchingDetailViewing.face_similarity?.toFixed(2)}%`} /></div>
+												</div>
+											</ColumnLayout>
+											<ColumnLayout columns={2} variant="text-grid">
+												<div>
+													<Box variant="awsui-key-label">Driver license</Box>
+													<div><MatchingResultIcon isMatch={matchingDetailViewing.driver_license.includes('$null') ? null:true} text={matchingDetailViewing.driver_license}/></div>
+												</div>
+												<div>
+													<Box variant="awsui-key-label">Vehicle class</Box>
+													<div><MatchingResultIcon isMatch={matchingDetailViewing.result_matching?.vehicle_class} text={matchingDetailViewing.result_ocr?.vehicle_class.TextValue??"-"}/></div>
+												</div>
+												<div>
+													<Box variant="awsui-key-label">First name</Box>
+													<div><MatchingResultIcon isMatch={matchingDetailViewing.result_matching?.first_name} text={matchingDetailViewing.result_ocr?.first_name.TextValue??"-"} /></div>
+												</div>
+												<div>
+													<Box variant="awsui-key-label">Last name</Box>
+													<div><MatchingResultIcon isMatch={matchingDetailViewing.result_matching?.last_name} text={matchingDetailViewing.result_ocr?.last_name.TextValue??"-"} /></div>
+												</div>
+											</ColumnLayout>
+										</ExpandableSection>
+										<ExpandableSection headerText="Debug (OCR)">
+											<img src={`${api.host_cloudfront}/user_upload/debug/${matchingDetailViewing.image.name}`} style={{width:"100%"}} alt='' />
+										</ExpandableSection>
+									</SpaceBetween>
+								</Container>
+							):(<>
 							<Container header={<Header variant="h2">Upload a License</Header>} >
 								<SpaceBetween direction="vertical" size="m">
 
@@ -146,17 +219,9 @@ export default function PageHome({ api }) {
 									)}
 
 									{/* Section: Upload */}
-									<FormField stretch label="Step 1" description="Driver license number">
-										<Input
-											autoFocus
-											placeholder="e.g. A12345678"
-											value={uploadingIDNumber}
-											onChange={event => { setUploadingIDNumber(event.detail.value); }}
-										/>
-									</FormField>
-									<FormField stretch label="Step 2" description="Upload a card image">
+									<FormField stretch description="Upload ID card image for verification.">
 										<FileUpload
-											onChange={({ detail }) => { setUploadingFile(detail.value); fileUploadStart(detail.value[0], uploadingIDNumber); }}
+											onChange={({ detail }) => { setUploadingFile(detail.value); fileUploadStart(detail.value[0]); }}
 											value={uploadingFile}
 											i18nStrings={{
 												uploadButtonText: e =>
@@ -180,89 +245,56 @@ export default function PageHome({ api }) {
 									</FormField>
 								</SpaceBetween>
 							</Container>
-
-							{/* Section: History */}
 							<Table
 								header={<Header variant="h2">History</Header>}
 								columnDefinitions={[
 									{
-										id: "variable",
-										header: "Variable name",
-										cell: item => <Link href="#">{item.name}</Link>,
-										sortingField: "name",
-										isRowHeader: true
+										id: "driver_license",
+										header: "Driver License",
+										cell: item => item.driver_license,
 									},
 									{
-										id: "value",
-										header: "Text value",
-										cell: item => item.alt,
-										sortingField: "alt"
+										id: "created",
+										header: "Created",
+										// cell: item => <Link key={item.id} href="#">{(new Date(item.created)).toLocaleString('US')}</Link>,
+										cell: item => (new Date(item.created)).toLocaleString('US'),
+										sortingField: "created"
 									},
 									{
-										id: "type",
-										header: "Type",
-										cell: item => item.type
+										id: "resulted",
+										header: "Verified",
+										cell: item => (new Date(item.resulted)).toLocaleString('US'),
 									},
 									{
-										id: "description",
-										header: "Description",
-										cell: item => item.description
+										id: "is_matched",
+										header: "Result",
+										cell: item => <MatchingResultIcon isMatch={item.is_matched} text={item.is_matched?"Valid":"Invalid"} />
+									},
+									{
+										id: "actions",
+										header: "Actions",
+										cell: item => <SpaceBetween direction="horizontal" size="xxs">
+											<Button variant="inline-link" onClick={()=>{ setMatchingDetailViewing(item); }}>View</Button>
+										</SpaceBetween>,
 									}
 								]}
 								columnDisplay={[
-									{ id: "variable", visible: true },
-									{ id: "value", visible: true },
-									{ id: "type", visible: true },
-									{ id: "description", visible: true }
+									// { id: "driver_license", visible: true },
+									{ id: "created", visible: true },
+									{ id: "resulted", visible: true },
+									{ id: "is_matched", visible: true },
+									{ id: "actions", visible: true },
 								]}
-								items={[
-									{
-										name: "Item 1",
-										alt: "First",
-										description: "This is the first item",
-										type: "1A",
-										size: "Small"
-									},
-									{
-										name: "Item 2",
-										alt: "Second",
-										description: "This is the second item",
-										type: "1B",
-										size: "Large"
-									},
-									{
-										name: "Item 3",
-										alt: "Third",
-										description: "-",
-										type: "1A",
-										size: "Large"
-									},
-									{
-										name: "Item 4",
-										alt: "Fourth",
-										description: "This is the fourth item",
-										type: "2A",
-										size: "Small"
-									},
-									{
-										name: "Item 5",
-										alt: "-",
-										description:
-											"This is the fifth item with a longer description",
-										type: "2A",
-										size: "Large"
-									},
-									{
-										name: "Item 6",
-										alt: "Sixth",
-										description: "This is the sixth item",
-										type: "1A",
-										size: "Small"
-									}
-								]}
+								items={matchingList??[]}
+								loading={matchingList==null}
 								loadingText="Loading resources"
-								selectionType="multi"
-								trackBy="name"
+								sortingColumn={matchingListSorting}
+								sortingDescending={matchingListSorting.sortingDescending}
+								onSortingChange={(event)=>{
+									setMatchingListSorting({...matchingListSorting, 'sortingDescending':event.detail.isDescending});
+									matchingList.sort((a,b)=>(new Date(a.created) - (new Date(b.created)))*(event.detail.isDescending?-1:1));
+								}}
+								trackBy="id"
 								empty={
 									<Box
 										margin={{ vertical: "xs" }}
@@ -271,20 +303,20 @@ export default function PageHome({ api }) {
 									>
 										<SpaceBetween size="m">
 											<b>No resources</b>
-											<Button>Create resource</Button>
 										</SpaceBetween>
 									</Box>
 								}
-								filter={
-									<TextFilter
-										filteringPlaceholder="Find resources (not yet functional)"
-										filteringText=""
-									/>
-								}
-								pagination={
-									<Pagination currentPageIndex={1} pagesCount={2} />
-								}
-							/>
+								// filter={
+								// 	<TextFilter
+								// 		filteringPlaceholder="Find resources (not yet functional)"
+								// 		filteringText=""
+								// 	/>
+								// }
+								// pagination={
+								// 	<Pagination currentPageIndex={1} pagesCount={2} />
+								// }
+								/>
+							</>)}
 						</SpaceBetween>
 					</ContentLayout>
 
