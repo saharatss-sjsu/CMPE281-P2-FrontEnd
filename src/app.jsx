@@ -16,8 +16,8 @@ export default function App() {
 	const [user, setUser] = useState(null);
 
 	let api = {};
-	// api.host_backend    = `http://localhost:8000`;
-	api.host_backend    = `${window.location.protocol}//${window.location.host}`;
+	api.host_backend    = `http://localhost:8000`;
+	// api.host_backend    = `${window.location.protocol}//${window.location.host}`;
 	api.host_cloudfront = 'https://d245rtkoblgto6.cloudfront.net';
 	api.session = {
 		'id':sessionID, 
