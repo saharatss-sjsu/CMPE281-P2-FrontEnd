@@ -11,14 +11,16 @@ import PageUserRegister from './pages/user/PageUserRegister';
 import PageUserProfile from './pages/user/PageUserProfile';
 
 export default function App() {
+	// eslint-disable-next-line no-unused-vars
 	const [cookies, setCookie, removeCookie] = useCookies(["sessionid"]);
 	const [sessionID, setSessionID] = useState(null);
 	const [user, setUser] = useState(null);
 
 	let api = {};
-	api.host_backend    = `http://localhost:8000`;
+	// api.host_backend    = `http://localhost:8000`;
 	// api.host_backend    = `${window.location.protocol}//${window.location.host}`;
-	api.host_cloudfront = 'https://d245rtkoblgto6.cloudfront.net';
+	api.host_backend    = 'https://license.saharatss.org';
+	api.host_cloudfront = 'https://license-media.saharatss.org';
 	api.session = {
 		'id':sessionID, 
 		'setSession':(newSessionID)=>{

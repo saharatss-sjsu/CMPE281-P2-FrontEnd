@@ -22,7 +22,7 @@ export default function NavigationBar({ user }) {
 						utilities={[
 							{
 								type: "menu-dropdown",
-								text: user?.username,
+								text: `${user?.first_name} ${user?.last_name}`,
 								description: user?.username,
 								iconName: "user-profile",
 								onItemClick: navbarItemClick,

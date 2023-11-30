@@ -18,7 +18,7 @@ import {
 	FileUpload,
 	Container,
 	Box,
-	Link,
+	// Link,
 	// TextFilter,
 	// Pagination,
 } from "@cloudscape-design/components";
@@ -281,7 +281,7 @@ export default function PageHome({ api }) {
 				navigationOpen={navigationOpen}
 				onNavigationChange={({detail}) => setNavigationOpen(detail.open)}
 				// ariaLabels={appLayoutLabels}
-				maxContentWidth={800}
+				maxContentWidth={1000}
 				content={<>
 					<ContentLayout header={<Header variant="h1">License Verification</Header>}>
 						<SpaceBetween direction="vertical" size="l">
