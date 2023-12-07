@@ -1,5 +1,15 @@
-import { Card, Button, Form } from 'react-bootstrap';
 import { useState, useEffect, useRef } from 'react';
+
+import {
+	Flex,
+	Card,
+	Link,
+	Button,
+	TextField,
+	PasswordField,
+	Heading,
+} from '@aws-amplify/ui-react';
+import { Form } from 'react-bootstrap';
 
 export default function PageUserProfile({ api }) {
 	const [formdata1, setFormdata1] = useState({});
@@ -21,7 +31,7 @@ export default function PageUserProfile({ api }) {
 			const data = await response.json();
 			if(response.status === 200){
 				setErrorMsg1("");
-				submitButton1.current.innerHTML = "Saved";
+				submitButton1.current.innerHTML = "Saved!";
 			}
 			else setErrorMsg1(data.msg);
 		}catch(error){ alert(error) } 
@@ -44,7 +54,7 @@ export default function PageUserProfile({ api }) {
 			const data = await response.json();
 			if(response.status === 200){
 				setErrorMsg2("");
-				submitButton2.current.innerHTML = "Saved";
+				submitButton2.current.innerHTML = "Saved!";
 			}
 			else setErrorMsg2(data.msg);
 		}catch(error){ alert(error) } 
@@ -66,7 +76,75 @@ export default function PageUserProfile({ api }) {
 
 	return (
 		<>
-			<Card className='mb-3'>
+			<Card variation="elevated">
+			<Link href="/">← Go back to home page</Link>
+			</Card>
+			<Card variation="elevated">
+				<Form onSubmit={handleSubmit1}>
+					<Flex direction="column">
+						<Heading width='30vw' level={4}>Your Information</Heading>
+						<TextField
+							label="First name"
+							name="first_name"
+							placeholder="Enter your first name"
+							defaultValue={formdata1.first_name || ""}
+							onChange={handleChange1}
+							hasError={errorMsg1 !== ""}
+						/>
+						<TextField
+							label="Last name"
+							name="last_name"
+							placeholder="Enter your last name"
+							defaultValue={formdata1.last_name || ""}
+							onChange={handleChange1}
+							hasError={errorMsg1 !== ""}
+						/>
+						<TextField
+							label="Username"
+							name="username"
+							placeholder="Enter your Username"
+							defaultValue={formdata1.username || ""}
+							onChange={handleChange1}
+							errorMessage={errorMsg1}
+							hasError={errorMsg1 !== ""}
+						/>
+						{/* <PasswordField
+							label="Password"
+							name="password"
+							placeholder="Enter your Username"
+							errorMessage={errorMsg1}
+							hasError={errorMsg1 !== ""}
+							defaultValue={formdata.password || ""}
+							onChange={handleChange}
+						/> */}
+						<Button variation="primary" type='submit' className='w-100 mt-3' ref={submitButton1}>Save</Button>
+					</Flex>
+				</Form>
+			</Card>
+			<Card variation="elevated">
+				<Form onSubmit={handleSubmit1}>
+					<Flex direction="column">
+						<Heading width='30vw' level={4}>Change password</Heading>
+						<PasswordField
+							label="New Password"
+							name="password"
+							placeholder="Enter your Username"
+							onChange={handleChange2}
+							hasError={errorMsg2 !== ""}
+						/>
+						<PasswordField
+							label="New Password (confirm)"
+							name="repassword"
+							placeholder="Enter your Username"
+							errorMessage={errorMsg2}
+							hasError={errorMsg2 !== ""}
+							onChange={handleChange2}
+						/>
+						<Button variation="primary" type='submit' className='w-100 mt-3' ref={submitButton2}>Save</Button>
+					</Flex>
+				</Form>
+			</Card>
+			{/* <Card className='mb-3'>
 				<Card.Body>
 					<small className="text-muted"><a href="/">← Go back to home page</a></small>
 				</Card.Body>
@@ -81,7 +159,7 @@ export default function PageUserProfile({ api }) {
 						</Form.Group>
 						<Form.Group className="mb-3" controlId="last_name">
 							<Form.Label>Last name</Form.Label>
-							<Form.Control type="text" placeholder="Enter your first name" name="last_name" value={formdata1.last_name || ""} onChange={handleChange1} />
+							<Form.Control type="text" placeholder="Enter your last name" name="last_name" value={formdata1.last_name || ""} onChange={handleChange1} />
 						</Form.Group>
 						<Form.Group className="mb-3" controlId="username">
 							<Form.Label>Username</Form.Label>
@@ -112,7 +190,7 @@ export default function PageUserProfile({ api }) {
 						</Button>
 					</Form>
 				</Card.Body>
-			</Card>
+			</Card> */}
 		</>
 	);
 }

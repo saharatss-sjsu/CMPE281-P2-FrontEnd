@@ -9,6 +9,7 @@ import {
 	Button,
 	TextField,
 	PasswordField,
+	Heading,
 } from '@aws-amplify/ui-react';
 
 import {
@@ -58,9 +59,10 @@ export default function PageUserLogin({ api }) {
 
 	return (
 		<>
-			<Card variation="outlined">
+			<Card variation="elevated">
 				<Form onSubmit={handleSubmit}>
 					<Flex direction="column">
+						<Heading width='30vw' level={4}>LieSense Checker</Heading>
 						<TextField
 							label="Username"
 							name="username"
@@ -78,8 +80,8 @@ export default function PageUserLogin({ api }) {
 							defaultValue={formdata.password || ""}
 							onChange={handleChange}
 						/>
+						<Button variation="primary" type='submit' className='w-100 mt-3'>Sign in</Button>
 					</Flex>
-					<Button variation="primary" type='submit' className='w-100 mt-3'>Sign in</Button>
 				</Form>
 			</Card>
 		</>
