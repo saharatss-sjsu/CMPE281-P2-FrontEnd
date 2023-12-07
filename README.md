@@ -1,4 +1,4 @@
-# LieSense Checker (Backend)
+# LieSense Checker (Frontend)
 
 Verifying Genuine Licenses in a Digital World.
 
