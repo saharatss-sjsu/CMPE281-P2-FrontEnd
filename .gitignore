@@ -24,3 +24,6 @@ yarn-error.log*
 setup/setup_prd.sh
 setup/server_frontend.zip
 package-lock.json
+
+setup/*.zip
+setup/build/
